@@ -1,0 +1,6 @@
+cdo==1.6.0
+cf_xarray==0.9.4
+numpy==2.1.0
+pandas==2.2.2
+xarray==2024.3.0
+xesmf==0.8.7
