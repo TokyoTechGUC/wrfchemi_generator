@@ -22,3 +22,7 @@ Edit the lines containing the following information in `generate_wrfchempi.py`
 * `reference_excel_htap` - Path of `NMVOC_speciation_HTAP_v3.xls`.
 * `alloc_racm_reference` - Path of `alloc_racm_species.csv`.
 * `out_folder` - Directory where the `wrfchem*` files will be stored.
+
+### Disclaimer and Caution
+This approach is currently under development and is not final.
+The developers will not be held responsible for any errors encountered in the implementation.
