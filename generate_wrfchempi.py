@@ -34,7 +34,7 @@ def download_raw_emissions():
             result = subprocess.run(['rm',ofile])
         else:
             print(f"{ofile} already exists. Skipping download.")
-    os.remove("_readme.html")
+    if os.path.exists("_readme.html"): os.remove("_readme.html")
     return 0
 
 def trim_to_wrfinput(df,clear_raw=False):
@@ -182,6 +182,7 @@ df = xr.open_dataset(wrfinpd)
 edgar_chem_dicts = {'BC':'BC','CO':'CO','NH3':'NH3','OC':'OC','PM10':'PM_10','PM2.5':'PM_25','SO2':'SO2'}
 
 df_out = df[['Times']]
+#df_out['Times'][:] = df_out['Times'].values[0]
 df_out.attrs = df.attrs
 area = xr.open_dataset(f'{edgar_folder}/area.nc')['cell_area']
 for var in edgar_chem_dicts:
@@ -198,7 +199,7 @@ for var in edgar_chem_dicts:
         values = values*1e12/ndays/24.0/3600.0/area
     df_out[edgar_chem_dicts[var]] = values[month-1,:,:] ## The month is specified above.
     df_out[edgar_chem_dicts[var]].attrs = {}
-    df_out[edgar_chem_dicts[var]].attrs['FieldType'] = 104
+    df_out[edgar_chem_dicts[var]].attrs['FieldType'] = np.int32(104)
     df_out[edgar_chem_dicts[var]].attrs['MemoryOrder'] = "XYZ"
     df_out[edgar_chem_dicts[var]].attrs['description'] = var_dicts[edgar_chem_dicts[var]]['description']
     df_out[edgar_chem_dicts[var]].attrs['units'] = var_dicts[edgar_chem_dicts[var]]['units']
@@ -208,7 +209,7 @@ for var in edgar_chem_dicts:
 
 for var in nodata_var:
     df_out[var] = xr.DataArray(np.zeros_like(values[month-1,:,:]),dims=['lat','lon'])
-    df_out[var].attrs['FieldType'] = 104
+    df_out[var].attrs['FieldType'] = np.int32(104)
     df_out[var].attrs['MemoryOrder'] = "XYZ"
     df_out[var].attrs['description'] = var_dicts[var]['description']
     df_out[var].attrs['units'] = var_dicts[var]['units']
@@ -230,7 +231,7 @@ for var in nox_vars:
         values = values*1e12/ndays/24.0/3600.0/area
     df_out[var] = nox_proportion[var]*values[month-1,:,:] ## The month is specified above.
     df_out[var].attrs = {}
-    df_out[var].attrs['FieldType'] = 104
+    df_out[var].attrs['FieldType'] = np.int32(104)
     df_out[var].attrs['MemoryOrder'] = "XYZ"
     df_out[var].attrs['description'] = var_dicts[var]['description']
     df_out[var].attrs['units'] = var_dicts[var]['units']
@@ -296,7 +297,7 @@ for var in nmvoc_vars:
         values = values*1e12/ndays/24.0/3600.0/area
     df_out[var] = values
     df_out[var].attrs = {}
-    df_out[var].attrs['FieldType'] = 104
+    df_out[var].attrs['FieldType'] = np.int32(104)
     df_out[var].attrs['MemoryOrder'] = "XYZ"
     df_out[var].attrs['description'] = var_dicts[var]['description']
     df_out[var].attrs['units'] = var_dicts[var]['units']
@@ -322,7 +323,7 @@ def resample_to_final_conservative(df_out,wrfinput_folder):
         df_target = xr.Dataset(coords=dimensions)
         regridder = xe.Regridder(df_out[['lat','lon']].rename({'lat':'latitude','lon':'longitude'}), df_target, 'conservative')#,ignore_degenerate=True)
         df_out_final = regridder(df_out.rename({'lat':'latitude','lon':'longitude'}))
-        df_out_final['Times'] = df_out['Times']
+        df_out_final['Times'] = df_out['Times'].values[0]
         df_out_final.attrs = df_out.attrs
         df_out_final = df_out_final.expand_dims(dim='emissions_zdim') #Add vertial level dimension. Currently surface
         #Add vertial level dimension. Currently surface
@@ -334,7 +335,7 @@ def resample_to_final_conservative(df_out,wrfinput_folder):
         for ivar in df_out_final.keys():
             if 'E_' in ivar:
                 df_out_final[ivar].attrs = {}
-                df_out_final[ivar].attrs['FieldType'] = 104
+                df_out_final[ivar].attrs['FieldType'] = np.int32(104)
                 df_out_final[ivar].attrs['MemoryOrder'] = "XYZ"
                 df_out_final[ivar].attrs['description'] = df_out[ivar].attrs['description']
                 df_out_final[ivar].attrs['units'] = df_out[ivar].attrs['units']
@@ -366,7 +367,7 @@ def resample_to_final(df_out,wrfinput_folder,verbose=True):
         if verbose: print(f"note: {iwrf} will be regridded by {resampler}.")
         regridder = xe.Regridder(df_out[['lat','lon']].rename({'lat':'latitude','lon':'longitude'}), df_target, resampler)#,ignore_degenerate=True)
         df_out_final = regridder(df_out.rename({'lat':'latitude','lon':'longitude'}))
-        df_out_final['Times'] = df_out['Times']
+        df_out_final['Times'] = df_out['Times'].values[0]
         df_out_final.attrs = df_out.attrs
         df_out_final = df_out_final.expand_dims(dim='emissions_zdim') #Add vertial level dimension. Currently surface
         #Add vertial level dimension. Currently surface
@@ -378,11 +379,11 @@ def resample_to_final(df_out,wrfinput_folder,verbose=True):
         for ivar in df_out_final.keys():
             if 'E_' in ivar:
                 df_out_final[ivar].attrs = {}
-                df_out_final[ivar].attrs['FieldType'] = 104
+                df_out_final[ivar].attrs['FieldType'] = np.int32(104)
                 df_out_final[ivar].attrs['MemoryOrder'] = "XYZ"
                 df_out_final[ivar].attrs['description'] = df_out[ivar].attrs['description']
                 df_out_final[ivar].attrs['units'] = df_out[ivar].attrs['units']
                 df_out_final[ivar].attrs['stagger'] = ""
                 df_out_final[ivar].attrs['coordinates'] = "XLONG XLAT XTIME"
-        df_out_final.drop(['lat','lon']).to_netcdf(os.path.basename(iwrf.replace('input_','chemi_')))
+        df_out_final.drop(['lat','lon']).to_netcdf(os.path.basename(iwrf.replace('input_','chemi_')),unlimited_dims=['Time'])
 resample_to_final(df_out,wrfinput_folder)
