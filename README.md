@@ -1,6 +1,6 @@
 # wrfchemi_generator
 Python-based `wrfchemi` generator using EDGAR-HTAPv3 dataset.
-Prepared by Alvin C.G. Varquez, GUC Lab, Tokyo Institute of Technology.
+Prepared by Alvin C.G. Varquez, GUC Lab, Institute of Science Tokyo.
 
 ### Installation
 Download the following files in the folder. 
